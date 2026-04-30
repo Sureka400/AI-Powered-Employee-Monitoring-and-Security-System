@@ -1,5 +1,4 @@
 # AI-Powered-Employee-Monitoring-and-Security-System
-# AI-Powered-Employee-Monitoring-and-Security-System
 1.Open terminal in project folder:
 cd employee-ocr-system
 2.Install required libraries:
