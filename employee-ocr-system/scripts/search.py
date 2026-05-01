@@ -1,9 +1,13 @@
 import pandas as pd
 
-df = pd.read_csv("../outputs/logs.csv")
+def search_logs(keyword):
+    logs_file = "../outputs/logs.csv"
+    df = pd.read_csv(logs_file)
 
-word = input("Enter word to search: ")
+    result = df[df['text'].str.contains(keyword, case=False, na=False)]
+    return result
 
-result = df[df["Text"].str.contains(word, case=False, na=False)]
-
-print(result)
+if __name__ == "__main__":
+    keyword = input("Enter keyword to search: ")
+    results = search_logs(keyword)
+    print(results)

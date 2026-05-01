@@ -1,8 +1,11 @@
+import sys
 import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import time
-import pandas as pd
-from datetime import datetime
+import csv
 from paddleocr import PaddleOCR
+from scripts.analysis import detect_sensitive_data, detect_keywords, classify_text, calculate_risk_score
 
 # Initialize OCR
 ocr = PaddleOCR(lang='en')
@@ -17,11 +20,14 @@ output_file = os.path.join(BASE_DIR, "outputs", "logs.csv")
 os.makedirs(watch_folder, exist_ok=True)
 os.makedirs(os.path.dirname(output_file), exist_ok=True)
 
-# Create CSV if not exists
+# Create CSV with header if not exists
 if not os.path.exists(output_file):
-    pd.DataFrame(columns=[
-        "Timestamp", "File", "Text", "Confidence"
-    ]).to_csv(output_file, index=False)
+    with open(output_file, "w", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow([
+            "image_path", "category", "risk_score",
+            "sensitive_data", "keywords", "text"
+        ])
 
 processed = set()
 
@@ -29,7 +35,7 @@ print(f"👀 Watching folder: {watch_folder}")
 
 while True:
     try:
-        # ✅ Scan ALL subfolders
+        # Scan all subfolders
         files = []
         for root, dirs, filenames in os.walk(watch_folder):
             for f in filenames:
@@ -42,49 +48,43 @@ while True:
     for path in files:
         file = os.path.basename(path)
 
-        # ✅ Process only images
+        # Process only image files
         if not file.lower().endswith((".png", ".jpg", ".jpeg")):
             continue
 
-        # ✅ FIX: use path instead of file
         if path not in processed:
-            print(f"Processing: {path}")
-
             try:
-                result = ocr.ocr(path)
+                result = ocr.ocr(path, cls=True)
 
-                if result is None or len(result) == 0:
-                    continue
+                # Safe OCR extraction
+                if result and result[0]:
+                    text = " ".join([line[1][0] for line in result[0]])
+                else:
+                    text = ""
 
-                rows = []
+                # Content analysis
+                sensitive_data = detect_sensitive_data(text)
+                keywords = detect_keywords(text)
+                category = classify_text(text)
+                risk_score = calculate_risk_score(sensitive_data, keywords)
 
-                for line in result[0]:
-                    try:
-                        text = line[1][0]
-                        conf = line[1][1]
-                    except:
-                        continue
-
-                    rows.append([
-                        datetime.now(),
-                        file,
-                        text,
-                        conf
+                # Write to CSV safely
+                with open(output_file, "a", newline="", encoding="utf-8") as f:
+                    writer = csv.writer(f)
+                    writer.writerow([
+                        path,
+                        category,
+                        risk_score,
+                        ",".join(sensitive_data),
+                        ",".join(keywords),
+                        text
                     ])
 
-                if rows:
-                    df = pd.DataFrame(rows, columns=[
-                        "Timestamp", "File", "Text", "Confidence"
-                    ])
+                print(f"Processed: {file}")
 
-                    df.to_csv(output_file, mode="a", header=False, index=False)
-
-                    print(f"✅ Processed: {file}")
-
-                # ✅ FIX: store full path
                 processed.add(path)
 
             except Exception as e:
-                print(f"❌ Error processing {file}: {e}")
+                print("❌ OCR error:", e)
 
     time.sleep(5)

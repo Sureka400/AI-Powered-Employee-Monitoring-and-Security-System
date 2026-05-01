@@ -4,7 +4,7 @@ cd employee-ocr-system
 2.Install required libraries:
 pip install pandas paddleocr
 3.Run the program:
-python scripts/watcher.py
+python -m scripts.watcher
 4.What to do next
 Put images inside screenshots/ folder
 The program will automatically process them
