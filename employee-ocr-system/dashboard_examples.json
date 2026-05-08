@@ -1,0 +1,86 @@
+{
+  "behavior_trends": {
+    "employees": [
+      {
+        "employee_code": "EMP001",
+        "employee_name": "Soniya Bhara",
+        "department": "Security Operations",
+        "average_active_hour": 39.5,
+        "normal_login_hours": [9, 10],
+        "common_applications": ["Chrome", "Excel"],
+        "average_keyword_frequency": 1.5,
+        "average_risk_score": 9.0,
+        "baseline_workflow": {
+          "monitoring": 1,
+          "reporting": 1
+        }
+      }
+    ]
+  },
+  "anomalies": {
+    "anomalies": [
+      {
+        "employee_code": "EMP001",
+        "anomaly_type": "repeated_password_exposure",
+        "anomaly_score": 88.2,
+        "severity": "critical",
+        "is_anomalous": true,
+        "detected_at": "2026-05-07T10:15:00+05:30",
+        "explanation": "repeated_password_exposure, excessive_network_activity"
+      }
+    ]
+  },
+  "risk_scores": {
+    "risk_scores": [
+      {
+        "employee_code": "EMP001",
+        "employee_name": "Soniya Bhara",
+        "score": 91,
+        "level": "critical",
+        "anomaly_score": 88.2,
+        "updated_at": "2026-05-07T10:15:02+05:30",
+        "factors": {
+          "sensitive_data": 24,
+          "suspicious_keywords": 38,
+          "anomaly_score": 30.87,
+          "security_alerts": 18,
+          "incident_frequency": 20,
+          "network_transfer": 12
+        }
+      }
+    ]
+  },
+  "alerts": {
+    "alerts": [
+      {
+        "employee_code": "EMP001",
+        "title": "Employee likely to leak credentials",
+        "severity": "critical",
+        "status": "open",
+        "predicted_incident": "credential_leak",
+        "created_at": "2026-05-07T10:15:04+05:30"
+      }
+    ]
+  },
+  "suspicious_summary": {
+    "high_risk_employees": 1,
+    "open_alerts": 2,
+    "critical_alerts": 1,
+    "top_alert_categories": [
+      {
+        "severity": "critical",
+        "total": 1
+      }
+    ],
+    "top_anomalies": [
+      {
+        "anomaly_type": "repeated_password_exposure",
+        "total": 1
+      }
+    ],
+    "example_dashboard_response": {
+      "trend": "elevated insider risk",
+      "summary": "Repeated risky actions and abnormal login patterns are clustered around a small employee subset."
+    }
+  }
+}

@@ -2,3 +2,6 @@ paddleocr
 paddlepaddle
 opencv-python
 pandas
+django
+numpy
+scikit-learn
