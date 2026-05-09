@@ -51,3 +51,27 @@ Behavioral analysis ignores non-employee noise such as:
 
 - Raw OCR event rows continue to be written to `employee-ocr-system/outputs/logs.csv`
 - Structured behavioral records, baselines, anomaly logs, risk scores, and alerts are stored in Django models
+## Django Admin Access
+
+Create admin account:
+
+python manage.py createsuperuser
+
+Run server:
+
+python manage.py runserver
+
+Open admin panel:
+
+http://127.0.0.1:8000/admin
+
+Login using the superuser credentials created above.
+
+The admin dashboard provides access to:
+
+- Employee Activities
+- Behavioral Alerts
+- Anomaly Logs
+- Risk Scores
+- Employee Behavior Profiles
+- Predictive Threat Analytics

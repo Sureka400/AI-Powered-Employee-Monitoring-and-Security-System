@@ -1,9 +1,9 @@
-from django.db.models import Avg
 from django.utils import timezone
 
 from alerts.generator import generate_predictive_alerts
 from analytics.baseline import update_behavior_profile
 from analytics.feature_extraction import derive_behavioral_metrics
+from analytics.prediction import build_predictive_alert
 from anomaly_detection.engine import persist_anomaly, score_activity, train_employee_model
 from monitoring.models import Employee, EmployeeActivity
 from risk_engine.scoring import calculate_dynamic_risk, persist_risk_score
@@ -64,18 +64,30 @@ def train_behavioral_baseline(employee):
 def run_behavioral_prediction(activity):
     employee = activity.employee
     if not hasattr(employee, "behavior_profile"):
-        train_behavioral_baseline(employee)
+        historical_activities = list(employee.activities.exclude(id=activity.id).order_by("-captured_at")[:200])
+        if historical_activities:
+            update_behavior_profile(employee, historical_activities)
+            train_employee_model(employee, historical_activities)
+        else:
+            train_behavioral_baseline(employee)
 
     anomaly_result = score_activity(employee, activity)
     anomaly_log = persist_anomaly(employee, activity, anomaly_result)
     risk_result = calculate_dynamic_risk(activity, anomaly_result)
     risk_profile = persist_risk_score(employee, activity, anomaly_result, risk_result)
-    alerts = generate_predictive_alerts(employee, activity, anomaly_result, risk_profile)
+    predictive_result = build_predictive_alert(employee, activity, anomaly_result, risk_profile)
+    alerts = generate_predictive_alerts(employee, activity, anomaly_result, risk_profile, predictive_result)
+
+    latest_activities = list(employee.activities.order_by("-captured_at")[:200])
+    if latest_activities:
+        update_behavior_profile(employee, latest_activities)
+        train_employee_model(employee, latest_activities)
 
     return {
         "anomaly": anomaly_log,
         "risk_profile": risk_profile,
         "alerts": alerts,
+        "prediction": predictive_result,
     }
 
 

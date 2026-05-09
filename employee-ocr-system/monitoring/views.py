@@ -30,6 +30,8 @@ def ingest_activity_view(request):
             "employee_code": activity.employee.employee_code,
             "risk_score": prediction["risk_profile"].score,
             "risk_level": prediction["risk_profile"].level,
+            "predicted_threat_level": prediction["prediction"]["predicted_threat_level"],
+            "confidence_score": prediction["prediction"]["confidence_score"],
             "alerts_created": len(prediction["alerts"]),
         }
     )
@@ -48,11 +50,14 @@ def employee_behavior_trends_view(request):
                 "employee_name": employee.name,
                 "department": employee.department,
                 "average_active_hour": round(profile.average_active_hour, 2),
+                "average_login_hour": round(profile.average_login_hour, 2),
                 "normal_login_hours": profile.normal_login_hours,
                 "common_applications": profile.common_applications,
+                "common_keywords": profile.common_keywords,
                 "average_keyword_frequency": round(profile.average_keyword_frequency, 2),
                 "average_risk_score": round(profile.average_risk_score, 2),
                 "baseline_workflow": profile.baseline_workflow,
+                "normal_activity_patterns": profile.normal_activity_patterns,
             }
         )
     return JsonResponse({"employees": data})
@@ -101,6 +106,8 @@ def alert_timeline_view(request):
             "severity": alert.severity,
             "status": alert.status,
             "predicted_incident": alert.predicted_incident,
+            "predicted_threat_level": alert.predicted_threat_level,
+            "confidence_score": alert.confidence_score,
             "created_at": alert.created_at.isoformat(),
         }
         for alert in BehavioralAlert.objects.select_related("employee")[:100]

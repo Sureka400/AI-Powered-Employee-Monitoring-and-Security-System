@@ -5,6 +5,7 @@ from pathlib import Path
 import numpy as np
 from sklearn.ensemble import IsolationForest
 
+from analytics.baseline import compare_activity_to_baseline
 from analytics.feature_extraction import build_feature_vector
 from monitoring.models import AnomalyLog, EmployeeActivity, EmployeeBehaviorProfile
 
@@ -47,6 +48,7 @@ def score_activity(employee, activity):
     profile = EmployeeBehaviorProfile.objects.filter(employee=employee).first()
     model = load_employee_model(employee.id)
     feature_vector = np.array([build_feature_vector(activity)], dtype=float)
+    baseline_comparison = compare_activity_to_baseline(profile, activity)
 
     rule_alerts = []
     if profile:
@@ -62,15 +64,22 @@ def score_activity(employee, activity):
             rule_alerts.append("excessive_network_activity")
         if activity.blocked_events > max(profile.average_blocked_events * 2, 2):
             rule_alerts.append("repeated_blocked_security_events")
+        rule_alerts.extend(baseline_comparison["flags"])
 
     if model is None:
-        anomaly_score = 0.0
-        is_anomalous = bool(rule_alerts)
+        anomaly_score = baseline_comparison["score"]
+        is_anomalous = bool(rule_alerts or baseline_comparison["is_deviating"])
     else:
         decision = float(model.decision_function(feature_vector)[0])
         anomaly_score = round((0.5 - decision) * 100, 2)
-        is_anomalous = bool(model.predict(feature_vector)[0] == -1 or rule_alerts)
+        anomaly_score = max(anomaly_score, baseline_comparison["score"])
+        is_anomalous = bool(
+            model.predict(feature_vector)[0] == -1
+            or rule_alerts
+            or baseline_comparison["is_deviating"]
+        )
 
+    rule_alerts = list(dict.fromkeys(rule_alerts))
     anomaly_type = rule_alerts[0] if rule_alerts else "behavioral_outlier"
     severity = "critical" if anomaly_score >= 80 else "high" if anomaly_score >= 60 else "medium" if anomaly_score >= 35 else "low"
 
@@ -80,6 +89,7 @@ def score_activity(employee, activity):
         "anomaly_type": anomaly_type,
         "severity": severity,
         "rule_alerts": rule_alerts,
+        "baseline_comparison": baseline_comparison,
     }
 
 
@@ -98,5 +108,6 @@ def persist_anomaly(employee, activity, anomaly_result):
             "network_bytes": activity.network_bytes,
             "login_hour": activity.login_hour,
             "risk_score": activity.risk_score,
+            "baseline_comparison": anomaly_result.get("baseline_comparison", {}),
         },
     )

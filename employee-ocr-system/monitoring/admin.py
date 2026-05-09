@@ -25,7 +25,7 @@ class EmployeeActivityAdmin(admin.ModelAdmin):
 
 @admin.register(EmployeeBehaviorProfile)
 class EmployeeBehaviorProfileAdmin(admin.ModelAdmin):
-    list_display = ("employee", "last_trained_at", "average_active_hour", "average_risk_score")
+    list_display = ("employee", "last_trained_at", "average_login_hour", "average_risk_score")
 
 
 @admin.register(EmployeeRiskScore)
@@ -36,7 +36,7 @@ class EmployeeRiskScoreAdmin(admin.ModelAdmin):
 
 @admin.register(BehavioralAlert)
 class BehavioralAlertAdmin(admin.ModelAdmin):
-    list_display = ("employee", "title", "severity", "status", "created_at")
+    list_display = ("employee", "title", "severity", "predicted_threat_level", "confidence_score", "status", "created_at")
     list_filter = ("severity", "status", "created_at")
 
 
