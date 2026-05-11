@@ -13,7 +13,11 @@ This repository now includes a Django-based behavioral analytics backend on top 
 5. Start the API:
    `python manage.py runserver`
 6. Start OCR monitoring:
-   `python -m scripts.watcher`
+`python -m scripts.watcher`
+7. for storing in csv
+python scripts/process_logs.py
+
+   ``
 
 ## Behavioral Analytics Modules
 
